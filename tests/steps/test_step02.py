@@ -2,10 +2,18 @@ import unittest
 
 import numpy as np
 
+from steps.step01 import Variable
+from steps.step02 import Square
+
 
 class TestStep01(unittest.TestCase):
     def test_check(self):
-        pass
+        x = Variable(np.array(10))
+        f = Square()
+        y = f(x)
+
+        self.assertIsInstance(y, Variable)
+        self.assertEqual(100, y.data)
 
 
 if __name__ == '__main__':
