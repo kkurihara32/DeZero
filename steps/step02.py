@@ -6,8 +6,8 @@ from steps.step01 import Variable
 
 
 class Function(object, metaclass=ABCMeta):
-    def __call__(self, input_value: Variable):
-        x = input_value.data
+    def __call__(self, input: Variable):
+        x = input.data
         y = self.forward(x)
         output = Variable(y)
 
