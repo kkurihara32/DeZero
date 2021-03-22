@@ -8,6 +8,8 @@ numpy = "*"
 
 [dev-packages]
 ipython = "*"
+memory-profiler = "*"
+psutil = "*"
 
 [requires]
 python_version = "3.9"
