@@ -16,6 +16,7 @@ def test_1():
 
     return 0
 
+
 @profile
 def test_2():
     with no_grad():
