@@ -95,6 +95,10 @@ class Variable(object):
     def generation(self, value):
         self._generation = value
 
+    @name.setter
+    def name(self, value):
+        self._name = value
+
     def set_creator(self, func):
         self._creator = func
         self._generation = func.generation + 1
