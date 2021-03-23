@@ -110,9 +110,9 @@ class Variable(object):
     def clear_grad(self):
         self._grad = None
 
-    def backward(self, retain_grad: bool = False):
+    def backward(self, retain_grad: bool = False, create_graph: bool = False):
         if self.grad is None:
-            self.grad = np.ones_like(self.data)
+            self.grad = Variable(np.ones_like(self.data))
 
         funcs = list()
         seen_set = set()
@@ -128,19 +128,21 @@ class Variable(object):
         while funcs:
             f = funcs.pop()
             gys = [output().grad for output in f.outputs]
-            gxs = f.backward(*gys)
 
-            if not isinstance(gxs, tuple):
-                gxs = (gxs,)
+            with using_config("enable_backprop", create_graph):
+                gxs = f.backward(*gys)
 
-            for x, gx in zip(f.inputs, gxs):
-                if x.grad is None:
-                    x.grad = gx
-                else:
-                    x.grad = x.grad + gx
+                if not isinstance(gxs, tuple):
+                    gxs = (gxs,)
 
-                if x.creator is not None:
-                    add_func(x.creator)
+                for x, gx in zip(f.inputs, gxs):
+                    if x.grad is None:
+                        x.grad = gx
+                    else:
+                        x.grad = x.grad + gx
+
+                    if x.creator is not None:
+                        add_func(x.creator)
 
             if not retain_grad:
                 for y in f.outputs:
@@ -215,7 +217,7 @@ class Add(Function):
         y = x0 + x1
         return y
 
-    def backward(self, gy: np.ndarray):
+    def backward(self, gy: Variable):
         return gy, gy
 
 
@@ -225,7 +227,7 @@ def add(x0, x1):
 
 
 class Square(Function):
-    def forward(self, x: np.array):
+    def forward(self, x: np.ndarray):
         y = x ** 2
         return y
 
@@ -244,8 +246,8 @@ class Mul(Function):
         y = x0 * x1
         return y
 
-    def backward(self, gy: np.ndarray):
-        x0, x1 = self.inputs[0].data, self.inputs[1].data
+    def backward(self, gy: Variable):
+        x0, x1 = self.inputs
         return gy * x1, gy * x0
 
 
@@ -255,10 +257,10 @@ def mul(x0, x1):
 
 
 class Neg(Function):
-    def forward(self, x):
-        return x
+    def forward(self, x: np.ndarray):
+        return -x
 
-    def backward(self, gy: np.ndarray):
+    def backward(self, gy: Variable):
         return -gy
 
 
@@ -270,8 +272,10 @@ class Sub(Function):
     def forward(self, x0, x1):
         return x0 - x1
 
-    def backward(self, gy):
-        return gy, -gy
+    def backward(self, gy: Variable):
+        gx0 = gy
+        gx1 = -gy
+        return gx0, gx1
 
 
 def sub(x0, x1):
@@ -288,9 +292,8 @@ class Div(Function):
     def forward(self, x0: np.ndarray, x1: np.ndarray):
         return x0 / x1
 
-    def backward(self, gy: np.ndarray):
-        x0 = self.inputs[0].data
-        x1 = self.inputs[1].data
+    def backward(self, gy: Variable):
+        x0, x1 = self.inputs
 
         gx0 = gy / x1
         gx1 = gy * (-x0 / (x1**2))
@@ -315,8 +318,8 @@ class Pow(Function):
     def forward(self, x: np.ndarray):
         return x ** self._c
 
-    def backward(self, gy: np.ndarray):
-        x = self.inputs[0].data
+    def backward(self, gy: Variable):
+        x, = self.inputs
         c = self._c
         gx = c * x ** (c - 1) * gy
 
