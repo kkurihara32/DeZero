@@ -227,7 +227,7 @@ def add(x0, x1):
 
 
 class Square(Function):
-    def forward(self, x: np.array):
+    def forward(self, x: np.ndarray):
         y = x ** 2
         return y
 
@@ -257,7 +257,7 @@ def mul(x0, x1):
 
 
 class Neg(Function):
-    def forward(self, x:Variable):
+    def forward(self, x: np.ndarray):
         return -x
 
     def backward(self, gy: Variable):
