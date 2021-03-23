@@ -1,6 +1,6 @@
 import numpy as np
 
-from steps.step02 import Function
+from steps.stage1.step02 import Function
 
 
 class EXP(Function):

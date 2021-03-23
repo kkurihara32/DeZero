@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from steps.step22 import Variable, square, add, Config, using_config, no_grad
+from steps.stage2.step22 import Variable
 
 
 class TestStep22(unittest.TestCase):

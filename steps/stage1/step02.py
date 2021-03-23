@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-from steps.step01 import Variable
+from steps.stage1.step01 import Variable
 
 
 class Function(object, metaclass=ABCMeta):

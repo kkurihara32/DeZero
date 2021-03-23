@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from steps.step09 import Variable, square, exp
+from steps.stage1.step09 import Variable, square
 
 
 def _numerical_diff(f, x: Variable, eps=1e-4):

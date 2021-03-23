@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from steps.step18 import Variable, square, add, Config, using_config, no_grad
+from steps.stage2.step18 import Variable, square, add, using_config, no_grad
 from memory_profiler import profile
 
 

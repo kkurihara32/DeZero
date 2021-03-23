@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from steps.step16 import Variable, add, square
+from steps.stage2.step17 import Variable,square
 from memory_profiler import profile
 
 
@@ -10,10 +10,10 @@ from memory_profiler import profile
 def test():
         x = Variable(np.random.randn(10000000))
         y = square(square(square(x)))
+        print(y)
 
 
-
-class TestStep16(unittest.TestCase):
+class TestStep17(unittest.TestCase):
     def test_check(self):
         # x = Variable(np.array(2.0))
         # a = square(x)
@@ -29,6 +29,7 @@ class TestStep16(unittest.TestCase):
         # actual = x.grad
         #
         # self.assertEqual(expected, actual)
+
         for i in range(15):
             test()
 

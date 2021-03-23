@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from steps.step08 import Variable, Square, EXP
+from steps.stage1.step08 import Variable, Square, EXP
 
 
 class TestStep08(unittest.TestCase):

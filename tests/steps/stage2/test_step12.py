@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from steps.step13 import Variable, add, square
+from steps.stage2.step13 import Variable, add, square
 
 
 class TestStep13(unittest.TestCase):

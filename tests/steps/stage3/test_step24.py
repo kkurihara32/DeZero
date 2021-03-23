@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from steps.step24 import sphere, matyas, goldstein
+from steps.stage3.step24 import sphere, matyas, goldstein
 from dezero import Variable
 
 

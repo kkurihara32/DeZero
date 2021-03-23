@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from steps.step12 import Variable, , add
+from steps.stage2.step12 import Variable, , add
 
 
 class TestStep12(unittest.TestCase):
