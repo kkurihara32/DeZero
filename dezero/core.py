@@ -4,6 +4,8 @@ from abc import abstractmethod, ABCMeta
 
 import numpy as np
 
+import dezero
+
 
 # =============================================================================
 # Config
@@ -148,6 +150,21 @@ class Variable(object):
                 for y in f.outputs:
                     y().grad = None
 
+    def reshape(self, *shape):
+        if len(shape) == 1 and isinstance(shape[0], (tuple, list)):
+            shape = shape[0]
+        return dezero.functions.reshape(self, shape)
+
+    def transpose(self):
+        return dezero.functions.transpose(self)
+
+    def sum(self, axis=None, keepdims=False):
+        return dezero.functions.sum(self, axis, keepdims)
+
+    @property
+    def T(self):
+        return dezero.functions.transpose(self)
+
 
 def as_array(x) -> np.ndarray:
     if np.isscalar(x):
@@ -163,8 +180,8 @@ def as_variable(obj):
 
 class Function(object, metaclass=ABCMeta):
     def __call__(self, *inputs: Variable):
-        inputs = [as_variable(x) for x in inputs]
 
+        inputs = [as_variable(x) for x in inputs]
         xs = [x.data for x in inputs]
         ys = self.forward(*xs)
         if not isinstance(ys, tuple):
@@ -214,11 +231,20 @@ class Function(object, metaclass=ABCMeta):
 # =============================================================================
 class Add(Function):
     def forward(self, x0: np.ndarray, x1: np.ndarray):
+        self.x0_shape = x0.shape
+        self.x1_shape = x1.shape
+
         y = x0 + x1
         return y
 
     def backward(self, gy: Variable):
-        return gy, gy
+        gx0 = gy
+        gx1 = gy
+
+        if self.x0_shape != self.x1_shape:
+            gx0 = dezero.functions.sum_to(gx0, self.x0_shape)
+            gx1 = dezero.functions.sum_to(gx1, self.x1_shape)
+        return gx0, gx1
 
 
 def add(x0, x1):
@@ -243,12 +269,19 @@ def square(x0):
 
 class Mul(Function):
     def forward(self, x0: np.ndarray, x1: np.ndarray):
+
         y = x0 * x1
         return y
 
     def backward(self, gy: Variable):
         x0, x1 = self.inputs
-        return gy * x1, gy * x0
+        gx0 = gy * x1
+        gx1 = gy * x0
+
+        if x0.shape != x1.shape:
+            gx0 = dezero.functions.sum_to(gx0, x0.shape)
+            gx1 = dezero.functions.sum_to(gx1, x1.shape)
+        return gx0, gx1
 
 
 def mul(x0, x1):
@@ -269,12 +302,19 @@ def neg(x):
 
 
 class Sub(Function):
-    def forward(self, x0, x1):
+    def forward(self, x0: np.ndarray, x1: np.ndarray):
+        self.x0_shape = x0.shape
+        self.x1_shape = x1.shape
         return x0 - x1
 
     def backward(self, gy: Variable):
         gx0 = gy
         gx1 = -gy
+
+        if self.x0_shape != self.x1_shape:
+            gx0 = dezero.functions.sum_to(gx0, self.x0_shape)
+            gx1 = dezero.functions.sum_to(gx1, self.x1_shape)
+
         return gx0, gx1
 
 
@@ -297,6 +337,12 @@ class Div(Function):
 
         gx0 = gy / x1
         gx1 = gy * (-x0 / (x1**2))
+
+        if x0.shape != x1.shape:
+            gx0 = dezero.functions.sum_to(gx0, x0.shape)
+            gx1 = dezero.functions.sum_to(gx1, x1.shape)
+
+
 
         return gx0, gx1
 
