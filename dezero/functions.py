@@ -114,7 +114,6 @@ def sum(x, axis=None, keepdims=False):
 class BroadcastTo(Function):
     def __init__(self, shape):
         self._shape = shape
-        print("b:{}".format(self._shape))
 
     def forward(self, x: np.ndarray):
         self.x_shape = x.shape
@@ -150,3 +149,39 @@ def sum_to(x, shape) -> Variable:
     if x.shape == shape:
         return as_variable(x)
     return SumTo(shape)(x)
+
+
+class MatMul(Function):
+    def forward(self, x: np.ndarray, W: np.ndarray):
+        y = np.dot(x, W)
+        return y
+
+    def backward(self, gy: Variable):
+        x, W = self.inputs
+        gx = matmul(gy, W.T)
+        gW = matmul(x.T, gy)
+        return gx, gW
+
+
+def matmul(x, W) -> Variable:
+    return MatMul()(x, W)
+
+
+class MeanSquaredError(Function):
+    def forward(self, x0: np.ndarray, x1: np.ndarray):
+        diff = x0 - x1
+        y = (diff ** 2).sum() / len(diff)
+        return y
+
+    def backward(self, gy: Variable):
+        x0, x1 = self.inputs
+        diff = x0 - x1
+        gy = broadcast_to(gy, diff.shape)
+        gx0 = gy * diff * (2. / len(diff))
+        gx1 = -gx0
+        return gx0, gx1
+
+
+def mean_squared_error(x0, x1):
+    return MeanSquaredError()(x0, x1)
+
