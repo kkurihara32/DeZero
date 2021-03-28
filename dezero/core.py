@@ -166,6 +166,10 @@ class Variable(object):
         return dezero.functions.transpose(self)
 
 
+class Parameter(Variable):
+    pass
+
+
 def as_array(x) -> np.ndarray:
     if np.isscalar(x):
         return np.array(x)
@@ -387,3 +391,4 @@ def setup_variable():
     Variable.__truediv__ = div
     Variable.__rtruediv__ = rdiv
     Variable.__pow__ = pow
+    Variable.__getitem__ = dezero.functions.get_item

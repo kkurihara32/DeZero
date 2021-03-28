@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+from dezero import cuda
+
 
 def _dot_var(v, verbose=False):
     dot_var = '{id} [label="{label}", color=orange, style=filled]\n'
@@ -51,20 +53,27 @@ def get_dot_graph(output, verbose=True):
     return "digraph g {\n" + txt + "}"
 
 
-def plot_dot_graph(output, verbose=True, to_file="graph.png"):
-    dot_graph = get_dot_graph(output, verbose=verbose)
+def plot_dot_graph(output, verbose=True, to_file='graph.png'):
+    dot_graph = get_dot_graph(output, verbose)
 
-    tmp_dir = os.path.join(os.path.expanduser("~"), ".dezero")
+    tmp_dir = os.path.join(os.path.expanduser('~'), '.dezero')
     if not os.path.exists(tmp_dir):
         os.mkdir(tmp_dir)
-    graph_path = os.path.join(tmp_dir, "tmp_graph.dot")
+    graph_path = os.path.join(tmp_dir, 'tmp_graph.dot')
 
-    with open(graph_path, "w") as f:
+    with open(graph_path, 'w') as f:
         f.write(dot_graph)
 
-    extension = os.path.splitext(to_file)[1][1:]
-    cmd = "dot {} -T {} -o {}".format(graph_path, extension, to_file)
+    extension = os.path.splitext(to_file)[1][1:]  # Extension(e.g. png, pdf)
+    cmd = 'dot {} -T {} -o {}'.format(graph_path, extension, to_file)
     subprocess.run(cmd, shell=True)
+
+    # Return the image as a Jupyter Image object, to be displayed in-line.
+    try:
+        from IPython import display
+        return display.Image(filename=to_file)
+    except:
+        pass
 
 
 def reshape_sum_backward(gy, x_shape, axis, keepdims):
@@ -118,3 +127,13 @@ def sum_to(x, shape):
     if lead > 0:
         y = y.squeeze(lead_axis)
     return y
+
+def logsumexp(x, axis=1):
+    xp = cuda.get_array_module(x)
+    m = x.max(axis=axis, keepdims=True)
+    y = x - m
+    xp.exp(y, out=y)
+    s = y.sum(axis=axis, keepdims=True)
+    xp.log(s, out=s)
+    m += s
+    return m
