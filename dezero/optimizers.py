@@ -1,3 +1,8 @@
+import math
+
+from dezero import cuda, Parameter
+
+
 class Optimizer(object):
     def __init__(self):
         self._target = None
