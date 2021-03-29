@@ -12,6 +12,7 @@ import dezero
 # =============================================================================
 class Config:
     enable_backprop = True
+    train = True
 
 
 @contextlib.contextmanager
@@ -24,6 +25,10 @@ def using_config(name, value):
         setattr(Config, name, old_value)
 
 
+def test_mode():
+    return using_config("train", False)
+
+
 def no_grad():
     return using_config("enable_backprop", False)
 
@@ -31,12 +36,19 @@ def no_grad():
 # =============================================================================
 # Variable / Function
 # =============================================================================
+try:
+    import cupy
+    array_types = (np.ndarray, cupy.ndarray)
+except ImportError:
+    array_types = (np.ndarray)
+
+
 class Variable(object):
     __array_priority__ = 200
 
     def __init__(self, data: np.ndarray, name: str = None):
         if data is not None:
-            if not isinstance(data, np.ndarray):
+            if not isinstance(data, array_types):
                 raise TypeError("{} is not supported type".format(type(data)))
         self._data = data
         self._grad = None
@@ -114,7 +126,8 @@ class Variable(object):
 
     def backward(self, retain_grad: bool = False, create_graph: bool = False):
         if self.grad is None:
-            self.grad = Variable(np.ones_like(self.data))
+            xp = dezero.cuda.get_array_module(self._data)
+            self.grad = Variable(xp.ones_like(self._data))
 
         funcs = list()
         seen_set = set()
@@ -164,6 +177,14 @@ class Variable(object):
     @property
     def T(self):
         return dezero.functions.transpose(self)
+
+    def to_cpu(self):
+        if self._data is not None:
+            self._data = dezero.cuda.as_numpy(self._data)
+
+    def to_gpu(self):
+        if self.data is not None:
+            self._data = dezero.cuda.as_cupy(self._data)
 
 
 class Parameter(Variable):
